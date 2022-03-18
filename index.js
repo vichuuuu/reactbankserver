@@ -17,13 +17,9 @@ const jwtmiddleware = (req, res, next) => {
     try {
 
         const token = req.headers["x-access-token"]
-
         //token=token.split(" ")[1]
         const data = jwt.verify(token, 'secretkey123')
-
         next()
-
-
     }
     catch (err) {
         console.log(err);
@@ -45,7 +41,6 @@ app.post("/register", (req, res) => {
             res.send({ message: "already exist" })
         }
         else {
-
 
             const user = new db.User({
                 uname,
@@ -76,20 +71,19 @@ app.post("/login", (req, res) => {
                     currentAcc: acno
                 }, 'secretkey123')
                 console.log(token);
-                
+
                 res.json({
                     Status: 200,
-                    message: "login successful",
+                    message: "login successfull",
                     token
                 })
 
             } else {
-                // res.status(401).send({ message: "incorrect password" })
+                // res.status(402).send({ message: "incorrect password" })
                 res.json({
                     Status: 404,
                     message: "incorrect password",
-                    
-                })
+                 })
             }
 
         } else {
@@ -100,28 +94,62 @@ app.post("/login", (req, res) => {
 
 
 app.post("/deposit", jwtmiddleware, (req, res) => {
-   
-     const { acno, password, amount } = req.body
-     var amounts = parseInt(amount)
-     console.log(acno);
-    db.User.findOne({acno,password}).then(user => {
+
+    const { acno, password, amount } = req.body
+    var amounts = parseInt(amount)
+    console.log(acno);
+    db.User.findOne({ acno, password }).then(user => {
         console.log(user)
         if (user) {
-             if (password === user.password) {
-           
-              user.balance += amounts
-              user.save()
-              res.send({message: "your account is credited with"+amount})
+            if (password === user.password) {
+
+                user.balance += amounts
+                user.save()
+                res.send({ message: "your account is credited with" + amount })
             } else {
                 res.send({ message: "incorrect password" })
-             }
-         } else {
+            }
+        } else {
             res.send({ message: "user does not exist" })
-         }
+        }
     })
 })
 
 
+app.post("/deleteacc", jwtmiddleware, (req, res) => {
+    const { acno, password } = req.body
+    db.User.findOneAndDelete({ acno, password }).then(user => {
+
+        if (user) {
+            res.send({ message: "account deleted successfully" })
+        } else {
+            res.send({ message: "cannot find user" })
+        }
+    })
+})
+
+app.post("/search",(req,res)=>{
+     const {acno} =req.body
+    db.User.findOne({acno}).then(user=>{
+        console.log(user);
+        res.send(user)
+      })
+})
+
+app.post("/view", (req,res)=>{
+     const {acno}=req.body
+    
+     db.User.find().sort({acno}).then(user=>{
+            res.send(user)
+        })
+})
+   app.post("/view",(req,res)=>{
+    const {uname}=req.body
+    
+       return db.User.find().sort({uname}).then(user=>{
+            res.send(user)
+        })
+    })
 app.listen(4000, () => {
     console.log("server is up and runs at 4000")
 })
